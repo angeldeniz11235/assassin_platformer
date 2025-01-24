@@ -8,7 +8,7 @@ function love.load()
 
     -- Load map
     sti = require 'libraries/sti'
-    gameMap = sti("maps/level1.lua")
+    gameMap = sti("maps/level1-1.lua")
 
     love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
 
@@ -16,7 +16,7 @@ function love.load()
     player = {
         x = 100,
         y = 200,
-        speed = 100,
+        speed = 500,
         facing = "right",
         isMoving = false,
     }
@@ -102,6 +102,10 @@ function love.update(dt)
     -- Get width/height of background
     local mapW = gameMap.width * gameMap.tilewidth
     local mapH = gameMap.height * gameMap.tileheight
+
+    -- Clamp player position to map bounds
+    player.x = math.max(0 + player.animations.frame_width / 2, math.min(mapW - player.animations.frame_width / 2, player.x))
+    player.y = math.max(0 + player.animations.frame_height / 2, math.min(mapH - player.animations.frame_height / 2, player.y))
     
     -- Get window dimensions
     local windowW = love.graphics.getWidth()
@@ -124,9 +128,9 @@ end
 function love.draw()
     cam:attach()
         -- Draw game objects
-        gameMap:drawLayer(gameMap.layers["sky"])
-        gameMap:drawLayer(gameMap.layers["ocean"])
-        gameMap:drawLayer(gameMap.layers["foreground"])
+        gameMap:drawLayer(gameMap.layers["Background"])
+        gameMap:drawLayer(gameMap.layers["Platforms"])
+        gameMap:drawLayer(gameMap.layers["Objects"])
         -- Draw player
         if player.facing == "left" then
             player.animation.currentAnimation:draw(player.animation.currentSpriteSheet, player.x, player.y, 0, -4, 2, player.animations.frame_width/2, player.animations.frame_height/2, 0, 0)
