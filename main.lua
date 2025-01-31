@@ -10,19 +10,32 @@ function love.load()
     sti = require 'libraries/sti'
     gameMap = sti("maps/level1-1.lua")
 
+    -- Load Phisics library
+    wf = require 'libraries/windfield'
+    world = wf.newWorld(0, 0, true)
+    world:setGravity(0, 50)
+
     love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
 
     -- Create player object
     player = {
-        x = 100,
-        y = 200,
+        x = 70,
+        y = 20,
         speed = 500,
         facing = "right",
         isMoving = false,
     }
-    -- Load player sprites
+    -- Initialize player animations
     player.animations = {}
     player.animations.frame_width, player.animations.frame_height  = 16, 16
+
+    -- Player collision
+    world:addCollisionClass('Solid')
+    player.collider = world:newBSGRectangleCollider(player.x, player.y, player.animations.frame_width + 8, player.animations.frame_height + 5, 2)
+    player.collider:setCollisionClass('Solid')
+    player.collider:setFixedRotation(true)
+    player.collider:setObject(player)
+
     -- idle animation
     player.animations.spriteSheet_idle = love.graphics.newImage("sprites/assasin-spritesheet.png")
     player.animations.grid_idle = anim8.newGrid(player.animations.frame_width, player.animations.frame_height, player.animations.spriteSheet_idle:getWidth(), player.animations.spriteSheet_idle:getHeight())
@@ -71,6 +84,8 @@ function love.update(dt)
         player.animation.currentAnimation = player.animations.animation_walk
         player.isMoving = true
         player.facing = "left"
+        -- update the collider position
+        player.collider:setX(player.x)
     elseif love.keyboard.isDown("right") then
         -- Move player right
         player.x = player.x + player.speed * dt
@@ -78,6 +93,8 @@ function love.update(dt)
         player.animation.currentAnimation = player.animations.animation_walk
         player.isMoving = true
         player.facing = "right"
+        -- update the collider position
+        player.collider:setX(player.x)
     end
     
     if love.keyboard.isDown("up") then
@@ -86,12 +103,16 @@ function love.update(dt)
         player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
         player.animation.currentAnimation = player.animations.animation_jump
         player.isMoving = true
+        -- update the collider position
+        player.collider:setY(player.y)
     elseif love.keyboard.isDown("down") then
         -- Move player down
         --player.y = player.y + player.speed * dt -- player should not be able to move down
         player.animation.currentSpriteSheet = player.animations.spriteSheet_roll
         player.animation.currentAnimation = player.animations.animation_roll
         player.isMoving = true
+        -- update the collider position
+        player.collider:setY(player.y)
     end
 
     if not player.isMoving then
@@ -118,6 +139,13 @@ function love.update(dt)
     -- Clamp camera position to map bounds
     cameraX = math.max(windowW/2, math.min(mapW - windowW/2, cameraX))
     cameraY = math.max(windowH/2, math.min(mapH - windowH/2, cameraY))
+
+    --set the players position to the position of the collider
+    player.x, player.y = player.collider:getPosition()
+    player.y = player.y - 5 -- allow the collider to cover the player feet
+
+    -- update wf world
+    world:update(dt)
     
     -- Update camera position to exactly follow player within bounds
     cam:lookAt(cameraX, cameraY)
@@ -137,5 +165,7 @@ function love.draw()
         else
             player.animation.currentAnimation:draw(player.animation.currentSpriteSheet, player.x, player.y, 0, 4, 2, player.animations.frame_width/2, player.animations.frame_height/2, 0, 0)
         end
+        -- Draw wf world
+        world:draw()
     cam:detach()
 end
