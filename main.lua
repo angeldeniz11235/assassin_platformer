@@ -19,7 +19,7 @@ function love.load()
     -- Load Physics library
     wf = require 'libraries/windfield'
     world = wf.newWorld(0, 0, true)
-    world:setGravity(0, 800)
+    world:setGravity(0, 1100)
 
     love.graphics.setBackgroundColor(0.5, 0.5, 0.5)
 
@@ -36,7 +36,7 @@ function love.load()
         end
     else
         print(
-        "Warning: 'Platform-Colliders' layer not found or has no objects. Make sure your Tiled map has a 'Platform-Colliders' layer with objects.")
+            "Warning: 'Platform-Colliders' layer not found or has no objects. Make sure your Tiled map has a 'Platform-Colliders' layer with objects.")
         -- Create a temporary ground platform so the game doesn't crash
         local ground = world:newRectangleCollider(0, 500, 800, 100)
         ground:setType('static')
@@ -51,6 +51,9 @@ function love.load()
         isMoving = false,
         isJumping = false,
         canJump = true,
+        jumpForce = -300,  -- Adjust this value to control jump height
+        jumpCooldown = 0,  -- Add cooldown to prevent double jumping
+        maxJumpCooldown = 0.1  -- Maximum time between jumps
     }
 
     -- Initialize player animations
@@ -104,13 +107,11 @@ function love.load()
     player.collider:setFixedRotation(true)
     player.collider:setObject(player)
 
-    -- Add ground collision detection
+    -- Modify ground collision detection
     player.collider:setPreSolve(function(collider_1, collider_2, contact)
         if collider_2.collision_class == 'Ground' then
-            local px, py = player.collider:getPosition()
-            local ox, oy = contact:getNormal()
-
-            if oy < 0 then
+            local _, ny = contact:getNormal()
+            if ny < 0 then  -- Only when colliding from above
                 player.canJump = true
                 player.isJumping = false
             end
@@ -126,69 +127,82 @@ function love.update(dt)
     player.isMoving = false
     local vx, vy = player.collider:getLinearVelocity()
 
-    -- Check for player input
+    -- Update jump cooldown
+    if player.jumpCooldown > 0 then
+        player.jumpCooldown = player.jumpCooldown - dt
+    end
+
+    -- Handle horizontal movement
     if love.keyboard.isDown("left") then
-        -- Move player left
         vx = -player.speed
         player.animation.currentSpriteSheet = player.animations.spriteSheet_walk
         player.animation.currentAnimation = player.animations.animation_walk
         player.isMoving = true
         player.facing = "left"
     elseif love.keyboard.isDown("right") then
-        -- Move player right
         vx = player.speed
         player.animation.currentSpriteSheet = player.animations.spriteSheet_walk
         player.animation.currentAnimation = player.animations.animation_walk
         player.isMoving = true
         player.facing = "right"
     else
-        -- Add some friction when not moving
-        vx = vx * 0.9
+        -- Apply friction when not moving
+        vx = vx * 0.8
     end
 
-    if love.keyboard.isDown("up") and player.collider:enter('Solid') then
-        -- Jump only when touching ground
-        vy = -800 -- Adjust this value to control jump height
+    -- Handle jumping
+    if love.keyboard.isDown("space") and player.canJump and player.jumpCooldown <= 0 then
+        vy = player.jumpForce
+        player.isJumping = true
+        player.canJump = false
+        player.jumpCooldown = player.maxJumpCooldown
+        
+        -- Set jump animation
         player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
         player.animation.currentAnimation = player.animations.animation_jump
-        player.isMoving = true
     end
 
-    -- Update player velocity
+    -- Apply velocities before world update
     player.collider:setLinearVelocity(vx, vy)
 
-    -- Update animations based on vertical velocity
-    if vy < 0 then
-        -- Rising
-        player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
-        player.animation.currentAnimation = player.animations.animation_jump
-    elseif vy > 100 then
-        -- Falling
-        player.animation.currentSpriteSheet = player.animations.spriteSheet_fall
-        player.animation.currentAnimation = player.animations.animation_fall
-    elseif not player.isMoving then
-        player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
-        player.animation.currentAnimation = player.animations.animation_idle
-    end
-
-    -- Get width/height of background
-    local mapW = gameMap.width * gameMap.tilewidth
-    local mapH = gameMap.height * gameMap.tileheight
-
-    -- Update wf world
+    -- Update physics world
     world:update(dt)
 
     -- Get player position from collider
     player.x, player.y = player.collider:getPosition()
     player.y = player.y - 5 -- offset for feet position
 
-    -- Clamp player position to map bounds
-    player.x = math.max(0 + player.animations.frame_width / 2,
-        math.min(mapW - player.animations.frame_width / 2, player.x))
-    player.y = math.max(0 + player.animations.frame_height / 2,
-        math.min(mapH - player.animations.frame_height / 2, player.y))
+    -- Get current map dimensions
+    local mapW = gameMap.width * gameMap.tilewidth
+    local mapH = gameMap.height * gameMap.tileheight
 
-    -- Camera updates remain the same...
+    -- Clamp player position to map bounds
+    local newX = math.max(0 + player.animations.frame_width / 2,
+        math.min(mapW - player.animations.frame_width / 2, player.x))
+    local newY = math.max(0 + player.animations.frame_height / 2,
+        math.min(mapH - player.animations.frame_height / 2, player.y + 5)) - 5
+
+    -- Update collider position if clamped
+    if newX ~= player.x or newY ~= player.y then
+        player.collider:setPosition(newX, newY + 5)
+    end
+
+    player.x = newX
+    player.y = newY
+
+    -- Update animations based on vertical velocity
+    if vy < -50 then  -- Rising
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
+        player.animation.currentAnimation = player.animations.animation_jump
+    elseif vy > 50 then  -- Falling
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_fall
+        player.animation.currentAnimation = player.animations.animation_fall
+    elseif not player.isMoving then  -- Idle
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
+        player.animation.currentAnimation = player.animations.animation_idle
+    end
+
+    -- Camera updates
     local windowW = love.graphics.getWidth()
     local windowH = love.graphics.getHeight()
     local cameraX = player.x
