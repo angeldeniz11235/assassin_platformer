@@ -26,13 +26,18 @@ function love.load()
     -- Set up collision classes
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
+    world:addCollisionClass('Wall') -- Add Wall collision class
 
-    -- Create ground colliders from map - with safety checks
+    -- Create ground and wall colliders from map - with safety checks
     if gameMap.layers["Platform-Colliders"] and gameMap.layers["Platform-Colliders"].objects then
         for i, obj in pairs(gameMap.layers["Platform-Colliders"].objects) do
-            local ground = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
-            ground:setType('static')
-            ground:setCollisionClass('Ground')
+            local collider = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+            collider:setType('static')
+            if obj.properties and obj.properties.isWall then
+                collider:setCollisionClass('Wall')
+            else
+                collider:setCollisionClass('Ground')
+            end
         end
     else
         print(
@@ -107,14 +112,18 @@ function love.load()
     player.collider:setFixedRotation(true)
     player.collider:setObject(player)
 
-    -- Modify ground collision detection
+    -- Add ground collision detection
     player.collider:setPreSolve(function(collider_1, collider_2, contact)
         if collider_2.collision_class == 'Ground' then
-            local _, ny = contact:getNormal()
-            if ny < 0 then  -- Only when colliding from above
+            local px, py = player.collider:getPosition()
+            local ox, oy = contact:getNormal()
+
+            if oy < 0 then
                 player.canJump = true
                 player.isJumping = false
             end
+        elseif collider_2.collision_class == 'Wall' then
+            contact:setEnabled(false) -- Disable collision response with walls
         end
     end)
 
@@ -134,20 +143,22 @@ function love.update(dt)
 
     -- Handle horizontal movement
     if love.keyboard.isDown("left") then
+        -- Move player left
         vx = -player.speed
         player.animation.currentSpriteSheet = player.animations.spriteSheet_walk
         player.animation.currentAnimation = player.animations.animation_walk
         player.isMoving = true
         player.facing = "left"
     elseif love.keyboard.isDown("right") then
+        -- Move player right
         vx = player.speed
         player.animation.currentSpriteSheet = player.animations.spriteSheet_walk
         player.animation.currentAnimation = player.animations.animation_walk
         player.isMoving = true
         player.facing = "right"
     else
-        -- Apply friction when not moving
-        vx = vx * 0.8
+        -- Add some friction when not moving
+        vx = vx * 0.9
     end
 
     -- Handle jumping
@@ -162,33 +173,8 @@ function love.update(dt)
         player.animation.currentAnimation = player.animations.animation_jump
     end
 
-    -- Apply velocities before world update
+    -- Update player velocity
     player.collider:setLinearVelocity(vx, vy)
-
-    -- Update physics world
-    world:update(dt)
-
-    -- Get player position from collider
-    player.x, player.y = player.collider:getPosition()
-    player.y = player.y - 5 -- offset for feet position
-
-    -- Get current map dimensions
-    local mapW = gameMap.width * gameMap.tilewidth
-    local mapH = gameMap.height * gameMap.tileheight
-
-    -- Clamp player position to map bounds
-    local newX = math.max(0 + player.animations.frame_width / 2,
-        math.min(mapW - player.animations.frame_width / 2, player.x))
-    local newY = math.max(0 + player.animations.frame_height / 2,
-        math.min(mapH - player.animations.frame_height / 2, player.y + 5)) - 5
-
-    -- Update collider position if clamped
-    if newX ~= player.x or newY ~= player.y then
-        player.collider:setPosition(newX, newY + 5)
-    end
-
-    player.x = newX
-    player.y = newY
 
     -- Update animations based on vertical velocity
     if vy < -50 then  -- Rising
@@ -202,7 +188,24 @@ function love.update(dt)
         player.animation.currentAnimation = player.animations.animation_idle
     end
 
-    -- Camera updates
+    -- Get width/height of background
+    local mapW = gameMap.width * gameMap.tilewidth
+    local mapH = gameMap.height * gameMap.tileheight
+
+    -- Update wf world
+    world:update(dt)
+
+    -- Get player position from collider
+    player.x, player.y = player.collider:getPosition()
+    player.y = player.y - 5 -- offset for feet position
+
+    -- Clamp player position to map bounds
+    player.x = math.max(0 + player.animations.frame_width / 2,
+        math.min(mapW - player.animations.frame_width / 2, player.x))
+    player.y = math.max(0 + player.animations.frame_height / 2,
+        math.min(mapH - player.animations.frame_height / 2, player.y))
+
+    -- Camera updates remain the same...
     local windowW = love.graphics.getWidth()
     local windowH = love.graphics.getHeight()
     local cameraX = player.x
@@ -223,8 +226,8 @@ function love.draw()
     if gameMap.layers["Platforms"] then
         gameMap:drawLayer(gameMap.layers["Platforms"])
     end
-    if gameMap.layers["Items"] then
-        gameMap:drawLayer(gameMap.layers["Items"])
+    if gameMap.layers["Objects"] then
+        gameMap:drawLayer(gameMap.layers["Objects"])
     end
 
     -- Draw player
