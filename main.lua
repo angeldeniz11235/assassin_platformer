@@ -223,8 +223,8 @@ function love.draw()
     if gameMap.layers["Platforms"] then
         gameMap:drawLayer(gameMap.layers["Platforms"])
     end
-    if gameMap.layers["Objects"] then
-        gameMap:drawLayer(gameMap.layers["Objects"])
+    if gameMap.layers["Items"] then
+        gameMap:drawLayer(gameMap.layers["Items"])
     end
 
     -- Draw player
