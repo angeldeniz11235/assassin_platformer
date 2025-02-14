@@ -1,7 +1,7 @@
 return {
   version = "1.10",
   luaversion = "5.1",
-  tiledversion = "1.11.1",
+  tiledversion = "1.11.0",
   class = "",
   orientation = "orthogonal",
   renderorder = "right-down",
@@ -10,7 +10,7 @@ return {
   tilewidth = 16,
   tileheight = 16,
   nextlayerid = 5,
-  nextobjectid = 35,
+  nextobjectid = 63,
   properties = {},
   tilesets = {
     {
@@ -481,13 +481,15 @@ return {
           name = "",
           type = "",
           shape = "rectangle",
-          x = 943.75,
-          y = -0.25,
-          width = 16.25,
-          height = 48.5,
+          x = 944.75,
+          y = 47.25,
+          width = 15.25,
+          height = 1,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = ""
+          }
         },
         {
           id = 18,
@@ -534,7 +536,7 @@ return {
           type = "",
           shape = "rectangle",
           x = 704.25,
-          y = 159.5,
+          y = 159.75,
           width = 15.5,
           height = 64.25,
           rotation = 0,
@@ -573,9 +575,9 @@ return {
           type = "",
           shape = "rectangle",
           x = 608.5,
-          y = 270.75,
+          y = 272.386,
           width = 14.75,
-          height = 16.75,
+          height = 15.1136,
           rotation = 0,
           visible = true,
           properties = {}
@@ -604,7 +606,9 @@ return {
           height = 30.75,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = ""
+          }
         },
         {
           id = 27,
@@ -613,7 +617,7 @@ return {
           shape = "rectangle",
           x = 512,
           y = 224,
-          width = 14.75,
+          width = 15.8409,
           height = 31.5,
           rotation = 0,
           visible = true,
@@ -630,7 +634,9 @@ return {
           height = 33.5,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = "true"
+          }
         },
         {
           id = 29,
@@ -643,7 +649,9 @@ return {
           height = 15.25,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = ""
+          }
         },
         {
           id = 30,
@@ -656,7 +664,9 @@ return {
           height = 17.25,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = ""
+          }
         },
         {
           id = 31,
@@ -669,7 +679,9 @@ return {
           height = 15.25,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = ""
+          }
         },
         {
           id = 32,
@@ -682,7 +694,9 @@ return {
           height = 15.5,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = ""
+          }
         },
         {
           id = 33,
@@ -695,7 +709,9 @@ return {
           height = 17.5,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = ""
+          }
         },
         {
           id = 34,
@@ -703,12 +719,434 @@ return {
           type = "",
           shape = "rectangle",
           x = 576.5,
-          y = 112.25,
+          y = 126.5,
           width = 63.25,
-          height = 15.25,
+          height = 1,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["isWall"] = ""
+          }
+        },
+        {
+          id = 35,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 527.091,
+          y = 224.182,
+          width = 0.727273,
+          height = 31.0909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 36,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 542.909,
+          y = 256.455,
+          width = 0.727273,
+          height = 31.0909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 37,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 608.545,
+          y = 272.455,
+          width = 0.727273,
+          height = 14.7273,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 38,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 624,
+          y = 256.455,
+          width = 0.727273,
+          height = 16,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 39,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 687.273,
+          y = 240.364,
+          width = 0.727273,
+          height = 16,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 40,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 704.136,
+          y = 160.25,
+          width = 0.727273,
+          height = 79.75,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 41,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 718.636,
+          y = 160.125,
+          width = 0.727273,
+          height = 64,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 42,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 751.136,
+          y = 241.5,
+          width = 0.727273,
+          height = 15,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 43,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 880.386,
+          y = 241.25,
+          width = 0.727273,
+          height = 15,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 44,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 912.636,
+          y = 224,
+          width = 0.727273,
+          height = 15,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 45,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 928.636,
+          y = 209,
+          width = 0.727273,
+          height = 15,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 46,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 960.386,
+          y = 97.75,
+          width = 0.727273,
+          height = 94,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 47,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 943.886,
+          y = 193,
+          width = 0.727273,
+          height = 15,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 48,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 959.886,
+          y = 48.75,
+          width = 0.727273,
+          height = 30.5,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 49,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 944.386,
+          y = 0.75,
+          width = 0.727273,
+          height = 45.5,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 50,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 864.636,
+          y = 81,
+          width = 0.727273,
+          height = 14.5,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 51,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 815.636,
+          y = 80.25,
+          width = 0.727273,
+          height = 63,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 52,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 800.386,
+          y = 96,
+          width = 0.727273,
+          height = 64,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 53,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 799.636,
+          y = 192,
+          width = 0.727273,
+          height = 15.75,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 54,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 751.886,
+          y = 191.625,
+          width = 0.727273,
+          height = 15.75,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 55,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 639.136,
+          y = 63.875,
+          width = 0.727273,
+          height = 15.75,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 56,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 511.136,
+          y = 192.705,
+          width = 0.727273,
+          height = 31.0909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 57,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 527.386,
+          y = 177.455,
+          width = 0.727273,
+          height = 13.5909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 58,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 542.636,
+          y = 160.205,
+          width = 0.727273,
+          height = 15.5909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 59,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 558.636,
+          y = 144.455,
+          width = 0.727273,
+          height = 15.5909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 60,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 575.136,
+          y = 128.455,
+          width = 0.727273,
+          height = 15.5909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 61,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 480.636,
+          y = 64.2046,
+          width = 0.727273,
+          height = 15.5909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
+        },
+        {
+          id = 62,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 158.636,
+          y = 65.4546,
+          width = 0.727273,
+          height = 15.5909,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isWall"] = "isWall"
+          }
         }
       }
     }

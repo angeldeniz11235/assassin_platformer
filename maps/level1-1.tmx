@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" orientation="orthogonal" renderorder="right-down" width="600" height="63" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="35">
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="600" height="63" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="63">
  <editorsettings>
   <export target="level1-1.lua" format="lua"/>
  </editorsettings>
@@ -221,23 +221,199 @@
   <object id="13" x="913.25" y="224" width="14" height="15"/>
   <object id="14" x="881.5" y="240.5" width="30.5" height="15.75"/>
   <object id="16" x="960.25" y="47.5" width="15" height="143.25"/>
-  <object id="17" x="943.75" y="-0.25" width="16.25" height="48.5"/>
+  <object id="17" x="944.75" y="47.25" width="15.25" height="1">
+   <properties>
+    <property name="isWall" value=""/>
+   </properties>
+  </object>
   <object id="18" x="752.25" y="255.75" width="127" height="16.25"/>
   <object id="19" x="687.75" y="240.75" width="64" height="16.25"/>
   <object id="20" x="704.25" y="224.25" width="32" height="15.5"/>
-  <object id="21" x="704.25" y="159.5" width="15.5" height="64.25"/>
+  <object id="21" x="704.25" y="159.75" width="15.5" height="64.25"/>
   <object id="22" x="751.75" y="191.75" width="48.25" height="15.75"/>
   <object id="23" x="624" y="256" width="63" height="16.75"/>
-  <object id="24" x="608.5" y="270.75" width="14.75" height="16.75"/>
+  <object id="24" x="608.5" y="272.386" width="14.75" height="15.1136"/>
   <object id="25" x="544.25" y="287" width="62.75" height="17.25"/>
-  <object id="26" x="528" y="255.5" width="15.25" height="30.75"/>
-  <object id="27" x="512" y="224" width="14.75" height="31.5"/>
-  <object id="28" x="495.25" y="190.5" width="16.75" height="33.5"/>
-  <object id="29" x="510.75" y="176.5" width="17.5" height="15.25"/>
-  <object id="30" x="528.25" y="159.25" width="15" height="17.25"/>
-  <object id="31" x="543.25" y="144" width="16.5" height="15.25"/>
-  <object id="32" x="559.75" y="128.5" width="16.5" height="15.5"/>
-  <object id="33" x="640.75" y="94.75" width="15.25" height="17.5"/>
-  <object id="34" x="576.5" y="112.25" width="63.25" height="15.25"/>
+  <object id="26" x="528" y="255.5" width="15.25" height="30.75">
+   <properties>
+    <property name="isWall" value=""/>
+   </properties>
+  </object>
+  <object id="27" x="512" y="224" width="15.8409" height="31.5"/>
+  <object id="28" x="495.25" y="190.5" width="16.75" height="33.5">
+   <properties>
+    <property name="isWall" value="true"/>
+   </properties>
+  </object>
+  <object id="29" x="510.75" y="176.5" width="17.5" height="15.25">
+   <properties>
+    <property name="isWall" value=""/>
+   </properties>
+  </object>
+  <object id="30" x="528.25" y="159.25" width="15" height="17.25">
+   <properties>
+    <property name="isWall" value=""/>
+   </properties>
+  </object>
+  <object id="31" x="543.25" y="144" width="16.5" height="15.25">
+   <properties>
+    <property name="isWall" value=""/>
+   </properties>
+  </object>
+  <object id="32" x="559.75" y="128.5" width="16.5" height="15.5">
+   <properties>
+    <property name="isWall" value=""/>
+   </properties>
+  </object>
+  <object id="33" x="640.75" y="94.75" width="15.25" height="17.5">
+   <properties>
+    <property name="isWall" value=""/>
+   </properties>
+  </object>
+  <object id="34" x="576.5" y="126.5" width="63.25" height="1">
+   <properties>
+    <property name="isWall" value=""/>
+   </properties>
+  </object>
+  <object id="35" x="527.091" y="224.182" width="0.727273" height="31.0909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="36" x="542.909" y="256.455" width="0.727273" height="31.0909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="37" x="608.545" y="272.455" width="0.727273" height="14.7273">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="38" x="624" y="256.455" width="0.727273" height="16">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="39" x="687.273" y="240.364" width="0.727273" height="16">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="40" x="704.136" y="160.25" width="0.727273" height="79.75">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="41" x="718.636" y="160.125" width="0.727273" height="64">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="42" x="751.136" y="241.5" width="0.727273" height="15">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="43" x="880.386" y="241.25" width="0.727273" height="15">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="44" x="912.636" y="224" width="0.727273" height="15">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="45" x="928.636" y="209" width="0.727273" height="15">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="46" x="960.386" y="97.75" width="0.727273" height="94">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="47" x="943.886" y="193" width="0.727273" height="15">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="48" x="959.886" y="48.75" width="0.727273" height="30.5">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="49" x="944.386" y="0.75" width="0.727273" height="45.5">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="50" x="864.636" y="81" width="0.727273" height="14.5">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="51" x="815.636" y="80.25" width="0.727273" height="63">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="52" x="800.386" y="96" width="0.727273" height="64">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="53" x="799.636" y="192" width="0.727273" height="15.75">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="54" x="751.886" y="191.625" width="0.727273" height="15.75">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="55" x="639.136" y="63.875" width="0.727273" height="15.75">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="56" x="511.136" y="192.705" width="0.727273" height="31.0909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="57" x="527.386" y="177.455" width="0.727273" height="13.5909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="58" x="542.636" y="160.205" width="0.727273" height="15.5909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="59" x="558.636" y="144.455" width="0.727273" height="15.5909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="60" x="575.136" y="128.455" width="0.727273" height="15.5909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="61" x="480.636" y="64.2046" width="0.727273" height="15.5909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
+  <object id="62" x="158.636" y="65.4546" width="0.727273" height="15.5909">
+   <properties>
+    <property name="isWall" value="isWall"/>
+   </properties>
+  </object>
  </objectgroup>
 </map>
