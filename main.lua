@@ -26,7 +26,8 @@ function love.load()
     -- Set up collision classes
     world:addCollisionClass('Player')
     world:addCollisionClass('Ground')
-    world:addCollisionClass('Wall') -- Add Wall collision class
+    world:addCollisionClass('Wall')
+    world:addCollisionClass('Ceiling')
 
     -- Create ground and wall colliders from map - with safety checks
     if gameMap.layers["Platform-Colliders"] and gameMap.layers["Platform-Colliders"].objects then
@@ -48,6 +49,11 @@ function love.load()
         ground:setCollisionClass('Ground')
     end
 
+    -- Add ceiling collider at the top of the map
+    local ceilingCollider = world:newRectangleCollider(0, -10, gameMap.width * gameMap.tilewidth, 10)
+    ceilingCollider:setType('static')
+    ceilingCollider:setCollisionClass('Ceiling')
+
     player = {
         x = 70,
         y = 20,
@@ -56,10 +62,13 @@ function love.load()
         isMoving = false,
         isJumping = false,
         canJump = true,
-        jumpForce = -300,  -- Adjust this value to control jump height
-        jumpCooldown = 0,  -- Add cooldown to prevent double jumping
-        maxJumpCooldown = 0.1  -- Maximum time between jumps
+        jumpForce = -300,
+        jumpCooldown = 0,
+        maxJumpCooldown = 0.15,
+        isWallSliding = false,    -- New wall sliding state
+        wallSlideSpeed = 150      -- Speed of wall sliding (adjust as needed)
     }
+
 
     -- Initialize player animations
     player.animations = {}
@@ -121,9 +130,26 @@ function love.load()
             if oy < 0 then
                 player.canJump = true
                 player.isJumping = false
+                player.isWallSliding = false  -- Reset wall sliding when on ground
             end
         elseif collider_2.collision_class == 'Wall' then
-            contact:setEnabled(false) -- Disable collision response with walls
+            local nx, ny = contact:getNormal()
+            local vx, vy = player.collider:getLinearVelocity()
+            
+            -- Determine if player is against a wall
+            if math.abs(nx) > 0.1 then  -- Checking if collision normal is horizontal
+                player.isWallSliding = true
+                
+                -- Apply wall sliding
+                if vy > player.wallSlideSpeed then
+                    vy = player.wallSlideSpeed
+                    player.collider:setLinearVelocity(0, vy)
+                end
+            else
+                player.isWallSliding = false
+            end
+            
+            contact:setEnabled(true)  -- Enable collision response for walls
         end
     end)
 
@@ -141,39 +167,74 @@ function love.update(dt)
         player.jumpCooldown = player.jumpCooldown - dt
     end
 
-    -- Handle horizontal movement
-    if love.keyboard.isDown("left") then
-        -- Move player left
-        vx = -player.speed
+     -- Handle horizontal movement with wall sliding
+     if love.keyboard.isDown("left") then
+        if not player.isWallSliding then
+            vx = -player.speed
+        else
+            vx = -player.speed * 0.1  -- Reduced horizontal movement while wall sliding
+        end
         player.animation.currentSpriteSheet = player.animations.spriteSheet_walk
         player.animation.currentAnimation = player.animations.animation_walk
         player.isMoving = true
         player.facing = "left"
     elseif love.keyboard.isDown("right") then
-        -- Move player right
-        vx = player.speed
+        if not player.isWallSliding then
+            vx = player.speed
+        else
+            vx = player.speed * 0.1  -- Reduced horizontal movement while wall sliding
+        end
         player.animation.currentSpriteSheet = player.animations.spriteSheet_walk
         player.animation.currentAnimation = player.animations.animation_walk
         player.isMoving = true
         player.facing = "right"
     else
-        -- Add some friction when not moving
-        vx = vx * 0.9
+        if not player.isWallSliding then
+            vx = vx * 0.9  -- Normal friction when not wall sliding
+        else
+            vx = 0  -- Stop horizontal movement while wall sliding
+        end
     end
 
-    -- Handle jumping
-    if love.keyboard.isDown("space") and player.canJump and player.jumpCooldown <= 0 then
-        vy = player.jumpForce
-        player.isJumping = true
-        player.canJump = false
-        player.jumpCooldown = player.maxJumpCooldown
-        
-        -- Set jump animation
+    -- Update animations based on vertical velocity and wall sliding
+    if player.isWallSliding then
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_fall  -- Use fall animation for wall slide
+        player.animation.currentAnimation = player.animations.animation_fall
+    elseif vy < -50 then  -- Rising
         player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
         player.animation.currentAnimation = player.animations.animation_jump
+    elseif vy > 50 then  -- Falling
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_fall
+        player.animation.currentAnimation = player.animations.animation_fall
+    elseif not player.isMoving then  -- Idle
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
+        player.animation.currentAnimation = player.animations.animation_idle
     end
 
-    -- Update player velocity
+     -- Handle jumping with ceiling collision
+    if love.keyboard.isDown("space") and player.canJump and player.jumpCooldown <= 0 then
+        local px, py = player.collider:getPosition()
+        local nextY = py + player.jumpForce * dt  -- Calculate next position
+        
+        -- Check if the next position would hit the ceiling
+        if nextY - player.animations.frame_height/2 > 0 then  -- Ensure we stay within bounds
+            vy = player.jumpForce
+            player.isJumping = true
+            player.canJump = false
+            player.jumpCooldown = player.maxJumpCooldown
+            
+            -- Set jump animation
+            player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
+            player.animation.currentAnimation = player.animations.animation_jump
+        else
+            vy = 0  -- Stop upward movement if we would hit the ceiling
+        end
+    end
+
+      -- Update player velocity with clamping
+    local maxVelocity = 800
+    vx = math.max(-maxVelocity, math.min(maxVelocity, vx))
+    vy = math.max(-maxVelocity, math.min(maxVelocity, vy))
     player.collider:setLinearVelocity(vx, vy)
 
     -- Update animations based on vertical velocity
@@ -223,12 +284,12 @@ function love.draw()
     if gameMap.layers["Background"] then
         gameMap:drawLayer(gameMap.layers["Background"])
     end
-    if gameMap.layers["Platforms"] then
-        gameMap:drawLayer(gameMap.layers["Platforms"])
+    if gameMap.layers["Terrain"] then
+        gameMap:drawLayer(gameMap.layers["Terrain"])
     end
-    if gameMap.layers["Objects"] then
-        gameMap:drawLayer(gameMap.layers["Objects"])
-    end
+    -- if gameMap.layers["Objects"] then
+    --     gameMap:drawLayer(gameMap.layers["Objects"])
+    -- end
 
     -- Draw player
     if player.facing == "left" then
