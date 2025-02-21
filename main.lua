@@ -66,6 +66,7 @@ function love.load()
         jumpCooldown = 0,
         maxJumpCooldown = 0.15,
         isWallSliding = false,    -- New wall sliding state
+        wallDirection = nil,  -- "left" or "right"
         wallSlideSpeed = 150      -- Speed of wall sliding (adjust as needed)
     }
 
@@ -167,8 +168,8 @@ function love.update(dt)
         player.jumpCooldown = player.jumpCooldown - dt
     end
 
-     -- Handle horizontal movement with wall sliding
-     if love.keyboard.isDown("left") then
+    -- Handle horizontal movement with wall sliding
+    if love.keyboard.isDown("left") then
         if not player.isWallSliding then
             vx = -player.speed
         else
@@ -196,23 +197,37 @@ function love.update(dt)
         end
     end
 
-    -- Update animations based on vertical velocity and wall sliding
+    -- Detect wall direction
     if player.isWallSliding then
-        player.animation.currentSpriteSheet = player.animations.spriteSheet_fall  -- Use fall animation for wall slide
-        player.animation.currentAnimation = player.animations.animation_fall
-    elseif vy < -50 then  -- Rising
-        player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
-        player.animation.currentAnimation = player.animations.animation_jump
-    elseif vy > 50 then  -- Falling
-        player.animation.currentSpriteSheet = player.animations.spriteSheet_fall
-        player.animation.currentAnimation = player.animations.animation_fall
-    elseif not player.isMoving then  -- Idle
-        player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
-        player.animation.currentAnimation = player.animations.animation_idle
+        local px, py = player.collider:getPosition()
+        local colliders = world:queryRectangleArea(px - 1, py, 2, player.animations.frame_height, {'Wall'})
+        if #colliders > 0 then
+            player.wallDirection = "left"
+        else
+            colliders = world:queryRectangleArea(px + player.animations.frame_width - 1, py, 2, player.animations.frame_height, {'Wall'})
+            if #colliders > 0 then
+                player.wallDirection = "right"
+            end
+        end
     end
 
+        -- Update animations based on vertical velocity and wall sliding
+        if player.isWallSliding then
+            player.animation.currentSpriteSheet = player.animations.spriteSheet_fall  -- Use fall animation for wall slide
+            player.animation.currentAnimation = player.animations.animation_fall
+        elseif vy < -50 then  -- Rising
+            player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
+            player.animation.currentAnimation = player.animations.animation_jump
+        elseif vy > 50 then  -- Falling
+            player.animation.currentSpriteSheet = player.animations.spriteSheet_fall
+            player.animation.currentAnimation = player.animations.animation_fall
+        elseif not player.isMoving then  -- Idle
+            player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
+            player.animation.currentAnimation = player.animations.animation_idle
+        end
+
      -- Handle jumping with ceiling collision
-    if love.keyboard.isDown("space") and player.canJump and player.jumpCooldown <= 0 then
+     if love.keyboard.isDown("space") and player.canJump and player.jumpCooldown <= 0 then
         local px, py = player.collider:getPosition()
         local nextY = py + player.jumpForce * dt  -- Calculate next position
         
@@ -230,8 +245,23 @@ function love.update(dt)
             vy = 0  -- Stop upward movement if we would hit the ceiling
         end
     end
+    -- Handle wall jumping
+    if love.keyboard.isDown("space") and player.isWallSliding and player.jumpCooldown <= 0 then
+        local wallJumpForceX = 300  -- Horizontal force for wall jump
+        local wallJumpForceY = -400  -- Vertical force for wall jump
 
-      -- Update player velocity with clamping
+        if player.wallDirection == "left" then
+            vx = wallJumpForceX  -- Jump to the right
+        elseif player.wallDirection == "right" then
+            vx = -wallJumpForceX  -- Jump to the left
+        end
+
+        vy = wallJumpForceY  -- Apply upward force
+        player.isWallSliding = false  -- Stop wall sliding
+        player.jumpCooldown = player.maxJumpCooldown  -- Reset jump cooldown
+    end
+
+    -- Update player velocity with clamping
     local maxVelocity = 800
     vx = math.max(-maxVelocity, math.min(maxVelocity, vx))
     vy = math.max(-maxVelocity, math.min(maxVelocity, vy))
