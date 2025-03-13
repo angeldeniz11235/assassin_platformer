@@ -16,6 +16,23 @@ function love.load()
         print("- " .. layerName)
     end
 
+    -- Load animated tiles
+    animatedTiles = {}
+    for _, tileset in ipairs(gameMap.tilesets) do
+        if tileset.tiles then
+            for id, tile in pairs(tileset.tiles) do
+                if tile.animation then
+                    local gid = tileset.firstgid + id
+                    animatedTiles[gid] = {
+                        frames = tile.animation,
+                        currentFrame = 1,
+                        timer = 0
+                    }
+                end
+            end
+        end
+    end
+
     -- Load Physics library
     wf = require 'libraries/windfield'
     world = wf.newWorld(0, 0, true)
@@ -306,6 +323,10 @@ function love.update(dt)
     cam:lookAt(cameraX, cameraY)
 
     player.animation.currentAnimation:update(dt)
+    
+    -- Update animated tiles
+    gameMap:update(dt)
+    updateAnimatedTiles(dt)
 end
 
 function love.draw()
@@ -333,4 +354,29 @@ function love.draw()
     -- Draw collision boxes for debugging
     world:draw()
     cam:detach()
+end
+
+ --cycle through the animated tiles in the map
+ function updateAnimatedTiles(dt)
+    for gid, anim in pairs(animatedTiles) do
+        anim.timer = anim.timer + dt
+        local frame = anim.frames[anim.currentFrame]
+        
+        if anim.timer >= frame.duration / 1000 then
+            anim.timer = 0
+            anim.currentFrame = anim.currentFrame % #anim.frames + 1
+            local newFrame = anim.frames[anim.currentFrame].tileid + 1
+            for _, layer in ipairs(gameMap.layers) do
+                if layer.type == "tilelayer" then
+                    for y, row in ipairs(layer.data) do
+                        for x, tile in ipairs(row) do
+                            if tile and tile.gid == gid then
+                                layer.data[y][x] = gameMap.tiles[newFrame + (gid - newFrame)]
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
 end
