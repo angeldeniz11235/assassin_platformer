@@ -72,8 +72,8 @@ function love.load()
     ceilingCollider:setCollisionClass('Ceiling')
 
     player = {
-        x = 70,
-        y = 20,
+        x = 260,
+        y = 230,
         speed = 300,
         facing = "right",
         isMoving = false,
@@ -171,8 +171,8 @@ function love.load()
         end
     end)
 
-    -- Initialize camera
-    cam:lookAt(player.x, player.y)
+
+
 end
 
 function love.update(dt)
@@ -327,6 +327,11 @@ function love.update(dt)
     -- Update animated tiles
     gameMap:update(dt)
     updateAnimatedTiles(dt)
+
+            --zoom camera in onto the player
+    cam:zoomTo(3)
+    -- Initialize camera
+    cam:lookAt(player.x, player.y)
 end
 
 function love.draw()
@@ -352,7 +357,7 @@ function love.draw()
     end
 
     -- Draw collision boxes for debugging
-    world:draw()
+    --world:draw()
     cam:detach()
 end
 
