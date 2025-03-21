@@ -45,6 +45,7 @@ function love.load()
     world:addCollisionClass('Ground')
     world:addCollisionClass('Wall')
     world:addCollisionClass('Ceiling')
+    world:addCollisionClass('Coin')
 
     -- Create ground and wall colliders from map - with safety checks
     if gameMap.layers["Platform-Colliders"] and gameMap.layers["Platform-Colliders"].objects then
@@ -82,9 +83,9 @@ function love.load()
         jumpForce = -300,
         jumpCooldown = 0,
         maxJumpCooldown = 0.15,
-        isWallSliding = false,    -- New wall sliding state
-        wallDirection = nil,  -- "left" or "right"
-        wallSlideSpeed = 150      -- Speed of wall sliding (adjust as needed)
+        isWallSliding = false, -- New wall sliding state
+        wallDirection = nil,   -- "left" or "right"
+        wallSlideSpeed = 150   -- Speed of wall sliding (adjust as needed)
     }
 
 
@@ -132,6 +133,39 @@ function love.load()
     player.animation.currentAnimation = player.animations.animation_idle
     player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
 
+    --coin animation
+    coinCollected = false
+    coin_spriteSheet = love.graphics.newImage("sprites/coin-spritesheet.png")
+    coin_grid = anim8.newGrid(16, 16, coin_spriteSheet:getWidth(), coin_spriteSheet:getHeight())
+    coin_animation = anim8.newAnimation(coin_grid('1-4', 1), 0.2)
+    -- initialize coin position
+    coin_x = 300
+    coin_y = 400
+    -- Initialize coin collider
+    coin_collider = world:newCircleCollider(coin_x, coin_y, 8)
+    coin_collider:setType('static') -- Set as static collider
+    coin_collider:setCollisionClass('Coin')
+    coin_collider:setObject({ x = coin_x, y = coin_y })
+    --coin_collider:setSensor(true) -- Set as sensor to avoid physical collisions
+    coin_collider:setPreSolve(function(collider_1, collider_2, contact)
+        if collider_2.collision_class == 'Player' and not coinCollected then
+            -- Mark the coin as collected
+            coinCollected = true
+            
+            -- Add some debug output
+            print("Coin collision detected! coinCollected = " .. tostring(coinCollected))
+            
+            -- Move coin off-screen
+            -- coin_x = -100
+            -- coin_y = -100
+            -- coin_collider:setPosition(coin_x, coin_y)
+            coin_collider:setType('inactive') -- Disable the collider
+            coin_collider:setSensor(true) -- Set as sensor to avoid further collisions
+            print("Coin collected!")
+        end
+    end)
+
+
     -- Player collision
     player.collider = world:newBSGRectangleCollider(player.x, player.y, player.animations.frame_width + 8,
         player.animations.frame_height + 5, 2)
@@ -148,16 +182,16 @@ function love.load()
             if oy < 0 then
                 player.canJump = true
                 player.isJumping = false
-                player.isWallSliding = false  -- Reset wall sliding when on ground
+                player.isWallSliding = false -- Reset wall sliding when on ground
             end
         elseif collider_2.collision_class == 'Wall' then
             local nx, ny = contact:getNormal()
             local vx, vy = player.collider:getLinearVelocity()
-            
+
             -- Determine if player is against a wall
-            if math.abs(nx) > 0.1 then  -- Checking if collision normal is horizontal
+            if math.abs(nx) > 0.1 then -- Checking if collision normal is horizontal
                 player.isWallSliding = true
-                
+
                 -- Apply wall sliding
                 if vy > player.wallSlideSpeed then
                     vy = player.wallSlideSpeed
@@ -166,13 +200,10 @@ function love.load()
             else
                 player.isWallSliding = false
             end
-            
-            contact:setEnabled(true)  -- Enable collision response for walls
+
+            contact:setEnabled(true) -- Enable collision response for walls
         end
     end)
-
-
-
 end
 
 function love.update(dt)
@@ -190,7 +221,7 @@ function love.update(dt)
         if not player.isWallSliding then
             vx = -player.speed
         else
-            vx = -player.speed * 0.1  -- Reduced horizontal movement while wall sliding
+            vx = -player.speed * 0.1 -- Reduced horizontal movement while wall sliding
         end
         player.animation.currentSpriteSheet = player.animations.spriteSheet_walk
         player.animation.currentAnimation = player.animations.animation_walk
@@ -200,7 +231,7 @@ function love.update(dt)
         if not player.isWallSliding then
             vx = player.speed
         else
-            vx = player.speed * 0.1  -- Reduced horizontal movement while wall sliding
+            vx = player.speed * 0.1 -- Reduced horizontal movement while wall sliding
         end
         player.animation.currentSpriteSheet = player.animations.spriteSheet_walk
         player.animation.currentAnimation = player.animations.animation_walk
@@ -208,74 +239,76 @@ function love.update(dt)
         player.facing = "right"
     else
         if not player.isWallSliding then
-            vx = vx * 0.9  -- Normal friction when not wall sliding
+            vx = vx * 0.9 -- Normal friction when not wall sliding
         else
-            vx = 0  -- Stop horizontal movement while wall sliding
+            vx = 0        -- Stop horizontal movement while wall sliding
         end
     end
 
     -- Detect wall direction
     if player.isWallSliding then
         local px, py = player.collider:getPosition()
-        local colliders = world:queryRectangleArea(px - 1, py, 2, player.animations.frame_height, {'Wall'})
+        local colliders = world:queryRectangleArea(px - 1, py, 2, player.animations.frame_height, { 'Wall' })
         if #colliders > 0 then
             player.wallDirection = "left"
         else
-            colliders = world:queryRectangleArea(px + player.animations.frame_width - 1, py, 2, player.animations.frame_height, {'Wall'})
+            colliders = world:queryRectangleArea(px + player.animations.frame_width - 1, py, 2,
+                player.animations.frame_height, { 'Wall' })
             if #colliders > 0 then
                 player.wallDirection = "right"
             end
         end
     end
 
-        -- Update animations based on vertical velocity and wall sliding
-        if player.isWallSliding then
-            player.animation.currentSpriteSheet = player.animations.spriteSheet_fall  -- Use fall animation for wall slide
-            player.animation.currentAnimation = player.animations.animation_fall
-        elseif vy < -50 then  -- Rising
-            player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
-            player.animation.currentAnimation = player.animations.animation_jump
-        elseif vy > 50 then  -- Falling
-            player.animation.currentSpriteSheet = player.animations.spriteSheet_fall
-            player.animation.currentAnimation = player.animations.animation_fall
-        elseif not player.isMoving then  -- Idle
-            player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
-            player.animation.currentAnimation = player.animations.animation_idle
-        end
+    -- Update animations based on vertical velocity and wall sliding
+    if player.isWallSliding then
+        player.animation.currentSpriteSheet = player.animations
+            .spriteSheet_fall -- Use fall animation for wall slide
+        player.animation.currentAnimation = player.animations.animation_fall
+    elseif vy < -50 then      -- Rising
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
+        player.animation.currentAnimation = player.animations.animation_jump
+    elseif vy > 50 then -- Falling
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_fall
+        player.animation.currentAnimation = player.animations.animation_fall
+    elseif not player.isMoving then -- Idle
+        player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
+        player.animation.currentAnimation = player.animations.animation_idle
+    end
 
-     -- Handle jumping with ceiling collision
-     if love.keyboard.isDown("space") and player.canJump and player.jumpCooldown <= 0 then
+    -- Handle jumping with ceiling collision
+    if love.keyboard.isDown("space") and player.canJump and player.jumpCooldown <= 0 then
         local px, py = player.collider:getPosition()
-        local nextY = py + player.jumpForce * dt  -- Calculate next position
-        
+        local nextY = py + player.jumpForce * dt -- Calculate next position
+
         -- Check if the next position would hit the ceiling
-        if nextY - player.animations.frame_height/2 > 0 then  -- Ensure we stay within bounds
+        if nextY - player.animations.frame_height / 2 > 0 then -- Ensure we stay within bounds
             vy = player.jumpForce
             player.isJumping = true
             player.canJump = false
             player.jumpCooldown = player.maxJumpCooldown
-            
+
             -- Set jump animation
             player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
             player.animation.currentAnimation = player.animations.animation_jump
         else
-            vy = 0  -- Stop upward movement if we would hit the ceiling
+            vy = 0 -- Stop upward movement if we would hit the ceiling
         end
     end
     -- Handle wall jumping
     if love.keyboard.isDown("space") and player.isWallSliding and player.jumpCooldown <= 0 then
         local wallJumpForceX = 300  -- Horizontal force for wall jump
-        local wallJumpForceY = -400  -- Vertical force for wall jump
+        local wallJumpForceY = -400 -- Vertical force for wall jump
 
         if player.wallDirection == "left" then
             vx = wallJumpForceX  -- Jump to the right
         elseif player.wallDirection == "right" then
-            vx = -wallJumpForceX  -- Jump to the left
+            vx = -wallJumpForceX -- Jump to the left
         end
 
-        vy = wallJumpForceY  -- Apply upward force
-        player.isWallSliding = false  -- Stop wall sliding
-        player.jumpCooldown = player.maxJumpCooldown  -- Reset jump cooldown
+        vy = wallJumpForceY                          -- Apply upward force
+        player.isWallSliding = false                 -- Stop wall sliding
+        player.jumpCooldown = player.maxJumpCooldown -- Reset jump cooldown
     end
 
     -- Update player velocity with clamping
@@ -285,13 +318,13 @@ function love.update(dt)
     player.collider:setLinearVelocity(vx, vy)
 
     -- Update animations based on vertical velocity
-    if vy < -50 then  -- Rising
+    if vy < -50 then -- Rising
         player.animation.currentSpriteSheet = player.animations.spriteSheet_jump
         player.animation.currentAnimation = player.animations.animation_jump
-    elseif vy > 50 then  -- Falling
+    elseif vy > 50 then -- Falling
         player.animation.currentSpriteSheet = player.animations.spriteSheet_fall
         player.animation.currentAnimation = player.animations.animation_fall
-    elseif not player.isMoving then  -- Idle
+    elseif not player.isMoving then -- Idle
         player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
         player.animation.currentAnimation = player.animations.animation_idle
     end
@@ -323,12 +356,23 @@ function love.update(dt)
     cam:lookAt(cameraX, cameraY)
 
     player.animation.currentAnimation:update(dt)
-    
+
+    -- update coin animation
+    coin_animation:update(dt)
+    -- Update coin position based on collider
+    if coin_collider then
+        coin_x, coin_y = coin_collider:getPosition()
+    end
+    -- Update coin collider position
+    if coin_collider then
+        coin_collider:setPosition(coin_x, coin_y)
+    end
+
     -- Update animated tiles
     gameMap:update(dt)
     updateAnimatedTiles(dt)
 
-            --zoom camera in onto the player
+    --zoom camera in onto the player
     cam:zoomTo(3)
     -- Initialize camera
     cam:lookAt(player.x, player.y)
@@ -356,17 +400,24 @@ function love.draw()
             player.animations.frame_width / 2, player.animations.frame_height / 2, 0, 0)
     end
 
+    -- Draw coin
+    print("Drawing coin, coinCollected = " .. tostring(coinCollected))
+    if coin_collider and not coinCollected then
+        coin_animation:draw(coin_spriteSheet, coin_x, coin_y, 0, 1, 1,
+            coin_spriteSheet:getHeight() / 2, coin_spriteSheet:getHeight() / 2)
+    end
+
     -- Draw collision boxes for debugging
     --world:draw()
     cam:detach()
 end
 
- --cycle through the animated tiles in the map
- function updateAnimatedTiles(dt)
+--cycle through the animated tiles in the map
+function updateAnimatedTiles(dt)
     for gid, anim in pairs(animatedTiles) do
         anim.timer = anim.timer + dt
         local frame = anim.frames[anim.currentFrame]
-        
+
         if anim.timer >= frame.duration / 1000 then
             anim.timer = 0
             anim.currentFrame = anim.currentFrame % #anim.frames + 1
