@@ -1,7 +1,7 @@
 return {
   version = "1.10",
   luaversion = "5.1",
-  tiledversion = "1.11.0",
+  tiledversion = "1.11.2",
   class = "",
   orientation = "orthogonal",
   renderorder = "right-down",
@@ -10,7 +10,7 @@ return {
   tilewidth = 16,
   tileheight = 16,
   nextlayerid = 5,
-  nextobjectid = 76,
+  nextobjectid = 77,
   properties = {},
   tilesets = {
     {
@@ -296,7 +296,7 @@ return {
       id = 4,
       name = "Platform-Colliders",
       class = "",
-      visible = false,
+      visible = true,
       opacity = 1,
       offsetx = 0,
       offsety = 0,
@@ -1253,6 +1253,21 @@ return {
           visible = true,
           properties = {
             ["isWall"] = ""
+          }
+        },
+        {
+          id = 76,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 662.227,
+          y = 555.281,
+          width = 110.364,
+          height = 6.52869,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["isOneWay"] = "isBridge"
           }
         }
       }

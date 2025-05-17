@@ -46,6 +46,8 @@ function love.load()
     world:addCollisionClass('Wall')
     world:addCollisionClass('Ceiling')
     world:addCollisionClass('Coin')
+    -- Add a new collision class for one-way platforms
+    world:addCollisionClass('OneWayPlatform')
 
     -- Create ground and wall colliders from map - with safety checks
     if gameMap.layers["Platform-Colliders"] and gameMap.layers["Platform-Colliders"].objects then
@@ -54,6 +56,11 @@ function love.load()
             collider:setType('static')
             if obj.properties and obj.properties.isWall then
                 collider:setCollisionClass('Wall')
+            elseif obj.properties and obj.properties.isOneWay then
+                -- Set as one-way platform
+                collider:setCollisionClass('OneWayPlatform')
+                -- Store the top Y coordinate for collision detection
+                collider:setObject({topY = obj.y})
             else
                 collider:setCollisionClass('Ground')
             end
@@ -85,7 +92,10 @@ function love.load()
         maxJumpCooldown = 0.15,
         isWallSliding = false, -- New wall sliding state
         wallDirection = nil,   -- "left" or "right"
-        wallSlideSpeed = 150   -- Speed of wall sliding (adjust as needed)
+        wallSlideSpeed = 150,  -- Speed of wall sliding (adjust as needed)
+        wantsToDropThrough = false, -- Flag for dropping through platforms
+        droppedPlatform = nil, -- Reference to the platform being dropped through
+        dropThroughTimer = 0   -- Timer to re-enable collision after dropping
     }
 
 
@@ -202,6 +212,35 @@ function love.load()
             end
 
             contact:setEnabled(true) -- Enable collision response for walls
+        elseif collider_2.collision_class == 'OneWayPlatform' then
+            local px, py = player.collider:getPosition()
+            local platformObj = collider_2:getObject()
+            local nx, ny = contact:getNormal()
+            
+            -- Check if the player is trying to drop through the platform
+            if player.wantsToDropThrough then
+                contact:setEnabled(false) -- Disable collision to allow dropping through
+                -- Store the platform we're dropping through to prevent re-enabling collision too soon
+                player.droppedPlatform = collider_2
+                player.dropThroughTimer = 0.3 -- Set a timeout before re-enabling collision (adjust as needed)
+                return
+            end
+            
+            -- Calculate player bottom Y position
+            local playerBottomY = py + (player.animations.frame_height + 5) / 2
+            local platformTopY = platformObj.topY
+            
+            -- If the player is coming from below or the sides, disable collision
+            -- Only allow collision from above (when player is falling)
+            if ny > 0 or playerBottomY > platformTopY + 2 then  -- +2 for a little buffer
+                contact:setEnabled(false)
+            else
+                -- Player is landing on top of the platform
+                player.canJump = true
+                player.isJumping = false
+                player.isWallSliding = false
+                contact:setEnabled(true)
+            end
         end
     end)
 end
@@ -214,6 +253,34 @@ function love.update(dt)
     -- Update jump cooldown
     if player.jumpCooldown > 0 then
         player.jumpCooldown = player.jumpCooldown - dt
+    end
+    
+    -- Update drop through timer
+    if player.dropThroughTimer > 0 then
+        player.dropThroughTimer = player.dropThroughTimer - dt
+        if player.dropThroughTimer <= 0 then
+            player.droppedPlatform = nil -- Clear the reference to the platform
+        end
+    end
+
+    -- Check for down + jump to drop through platforms
+    player.wantsToDropThrough = false
+    if love.keyboard.isDown("down") then
+        -- Check if player is standing on a one-way platform
+        local px, py = player.collider:getPosition()
+        local playerBottomY = py + (player.animations.frame_height + 5) / 2
+        
+        -- Query area just below the player's feet
+        local platformsBelow = world:queryRectangleArea(
+            px - 5, playerBottomY, 10, 2, {'OneWayPlatform'}
+        )
+        
+        -- If there's a platform below and the player presses down+space, enable dropping through
+        if #platformsBelow > 0 and love.keyboard.isDown("space") and player.canJump then
+            player.wantsToDropThrough = true
+            player.canJump = false -- Prevent immediate jumping after dropping
+            player.jumpCooldown = player.maxJumpCooldown
+        end
     end
 
     -- Handle horizontal movement with wall sliding
@@ -410,6 +477,10 @@ function love.draw()
     -- Draw collision boxes for debugging
     --world:draw()
     cam:detach()
+    
+    -- Draw controls info for one-way platforms
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("Press Down + Space to drop through one-way platforms", 10, 10)
 end
 
 --cycle through the animated tiles in the map
