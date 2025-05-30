@@ -217,6 +217,55 @@ function love.load()
             local platformObj = collider_2:getObject()
             local nx, ny = contact:getNormal()
             
+            -- Scenario 1: Player is actively trying to drop through (e.g., holding "down")
+            if player.wantsToDropThrough then
+                -- Ensure we are interacting with the platform from above or on it
+                local playerColliderActualHeight = player.animations.frame_height + 5
+                local playerBottomY = py + playerColliderActualHeight / 2 
+                local platformTopY = platformObj.topY
+                
+                -- Only disable contact if player is at or above the platform's surface
+                -- This prevents dropping through a platform that's far below.
+                -- The check in love.update should mostly ensure this, but an extra check here is safe.
+                if playerBottomY <= platformTopY + 5 then -- Allow a small tolerance
+                    contact:setEnabled(false) 
+                    player.droppedPlatform = collider_2 -- Store the platform we're dropping through
+                    player.dropThroughTimer = 0.3      -- Set timeout to re-enable collision with this platform
+                    return -- Important to return after disabling contact for this reason
+                end
+            end
+            
+            -- Scenario 2: Player is NOT actively trying to drop through,
+            -- BUT this might be the platform they just dropped from.
+            -- If so, keep contact disabled until the timer runs out.
+            if player.droppedPlatform == collider_2 and player.dropThroughTimer > 0 then
+                contact:setEnabled(false) -- Continue ignoring this specific platform
+                return
+            end
+            
+            -- Scenario 3: Standard one-way platform collision logic
+            -- (Player is not trying to drop, and not currently ignoring this platform due to a recent drop)
+            local playerColliderActualHeight = player.animations.frame_height + 5
+            local playerBottomY = py + playerColliderActualHeight / 2 
+            local platformTopY = platformObj.topY
+            
+            -- If the player is coming from below or is already significantly past the platform's top surface, disable collision.
+            -- 'ny > 0' means the collision normal is pointing upwards (player hitting platform from below or side).
+            -- 'playerBottomY > platformTopY + 2' means player's feet are already below the platform's top.
+            if ny > 0 or playerBottomY > platformTopY + 2 then  -- +2 for a little buffer
+                contact:setEnabled(false)
+            else
+                -- Player is landing on top of the platform (or walking onto it)
+                player.canJump = true
+                player.isJumping = false
+                player.isWallSliding = false
+                contact:setEnabled(true)
+            end
+        end
+            local px, py = player.collider:getPosition()
+            local platformObj = collider_2:getObject()
+            local nx, ny = contact:getNormal()
+            
             -- Check if the player is trying to drop through the platform
             if player.wantsToDropThrough then
                 contact:setEnabled(false) -- Disable collision to allow dropping through
@@ -263,23 +312,37 @@ function love.update(dt)
         end
     end
 
-    -- Check for down + jump to drop through platforms
-    player.wantsToDropThrough = false
+    -- Check for down to drop through platforms
+    player.wantsToDropThrough = false -- Reset each frame before checking
     if love.keyboard.isDown("down") then
-        -- Check if player is standing on a one-way platform
         local px, py = player.collider:getPosition()
-        local playerBottomY = py + (player.animations.frame_height + 5) / 2
+        -- Use the actual width and height of the player's collider for calculations
+        local playerColliderActualWidth = player.animations.frame_width + 8 
+        local playerColliderActualHeight = player.animations.frame_height + 5
         
-        -- Query area just below the player's feet
-        local platformsBelow = world:queryRectangleArea(
-            px - 5, playerBottomY, 10, 2, {'OneWayPlatform'}
+        -- Player's feet Y position (bottom edge of the collider)
+        local playerFeetY = py + playerColliderActualHeight / 2 
+        
+        -- Define the query area parameters below the player's feet
+        -- Use a significant portion of the player's width to ensure reliable detection
+        local queryWidth = playerColliderActualWidth * 0.9 -- Use 90% of player's collider width for detection
+        local queryX = px - queryWidth / 2 -- Centered under the player
+        local queryHeight = 2 -- A small height to check for a platform immediately underfoot
+        
+        -- Query for OneWayPlatform(s) just below the player's feet
+        local platformsPlayerIsOn = world:queryRectangleArea(
+            queryX, 
+            playerFeetY, -- The query rectangle's top edge starts at the player's feet level
+            queryWidth, 
+            queryHeight, 
+            {'OneWayPlatform'}
         )
         
-        -- If there's a platform below and the player presses down+space, enable dropping through
-        if #platformsBelow > 0 and love.keyboard.isDown("space") and player.canJump then
+        -- If the player is standing on a one-way platform and presses 'down', enable dropping through
+        if #platformsPlayerIsOn > 0 then
             player.wantsToDropThrough = true
-            player.canJump = false -- Prevent immediate jumping after dropping
-            player.jumpCooldown = player.maxJumpCooldown
+            player.canJump = false -- Prevent immediate jumping after initiating a drop
+            player.jumpCooldown = player.maxJumpCooldown -- Enforce jump cooldown to prevent re-jump glitches
         end
     end
 
@@ -468,7 +531,7 @@ function love.draw()
     end
 
     -- Draw coin
-    print("Drawing coin, coinCollected = " .. tostring(coinCollected))
+    -- print("Drawing coin, coinCollected = " .. tostring(coinCollected)) -- Keep for debugging if needed
     if coin_collider and not coinCollected then
         coin_animation:draw(coin_spriteSheet, coin_x, coin_y, 0, 1, 1,
             coin_spriteSheet:getHeight() / 2, coin_spriteSheet:getHeight() / 2)
@@ -480,7 +543,7 @@ function love.draw()
     
     -- Draw controls info for one-way platforms
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Press Down + Space to drop through one-way platforms", 10, 10)
+    love.graphics.print("Press Down to drop through one-way platforms", 10, 10) -- Updated text
 end
 
 --cycle through the animated tiles in the map
