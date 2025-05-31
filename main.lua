@@ -184,7 +184,8 @@ function love.load()
     player.collider:setObject(player)
 
     -- Add ground collision detection
-    player.collider:setPreSolve(function(collider_1, collider_2, contact)
+    player.collider:setPreSolve(
+    function(collider_1, collider_2, contact)
         if collider_2.collision_class == 'Ground' then
             local px, py = player.collider:getPosition()
             local ox, oy = contact:getNormal()
@@ -261,7 +262,6 @@ function love.load()
                 player.isWallSliding = false
                 contact:setEnabled(true)
             end
-        end
             local px, py = player.collider:getPosition()
             local platformObj = collider_2:getObject()
             local nx, ny = contact:getNormal()
@@ -290,9 +290,8 @@ function love.load()
                 player.isWallSliding = false
                 contact:setEnabled(true)
             end
-        end
     end)
-end
+end 
 
 function love.update(dt)
     -- Update game state
