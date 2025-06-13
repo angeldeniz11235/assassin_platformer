@@ -98,7 +98,6 @@ function love.load()
         dropThroughTimer = 0   -- Timer to re-enable collision after dropping
     }
 
-
     -- Initialize player animations
     player.animations = {}
     player.animations.frame_width, player.animations.frame_height = 16, 16
@@ -175,17 +174,14 @@ function love.load()
         end
     end)
 
-
     -- Player collision
-    player.collider = world:newBSGRectangleCollider(player.x, player.y, player.animations.frame_width + 8,
-        player.animations.frame_height + 5, 2)
+    player.collider = world:newBSGRectangleCollider(player.x, player.y, player.animations.frame_width + 8, player.animations.frame_height + 5, 2)
     player.collider:setCollisionClass('Player')
     player.collider:setFixedRotation(true)
     player.collider:setObject(player)
 
     -- Add ground collision detection
-    player.collider:setPreSolve(
-    function(collider_1, collider_2, contact)
+    player.collider:setPreSolve(function(collider_1, collider_2, contact)
         if collider_2.collision_class == 'Ground' then
             local px, py = player.collider:getPosition()
             local ox, oy = contact:getNormal()
@@ -262,36 +258,9 @@ function love.load()
                 player.isWallSliding = false
                 contact:setEnabled(true)
             end
-            local px, py = player.collider:getPosition()
-            local platformObj = collider_2:getObject()
-            local nx, ny = contact:getNormal()
-            
-            -- Check if the player is trying to drop through the platform
-            if player.wantsToDropThrough then
-                contact:setEnabled(false) -- Disable collision to allow dropping through
-                -- Store the platform we're dropping through to prevent re-enabling collision too soon
-                player.droppedPlatform = collider_2
-                player.dropThroughTimer = 0.3 -- Set a timeout before re-enabling collision (adjust as needed)
-                return
-            end
-            
-            -- Calculate player bottom Y position
-            local playerBottomY = py + (player.animations.frame_height + 5) / 2
-            local platformTopY = platformObj.topY
-            
-            -- If the player is coming from below or the sides, disable collision
-            -- Only allow collision from above (when player is falling)
-            if ny > 0 or playerBottomY > platformTopY + 2 then  -- +2 for a little buffer
-                contact:setEnabled(false)
-            else
-                -- Player is landing on top of the platform
-                player.canJump = true
-                player.isJumping = false
-                player.isWallSliding = false
-                contact:setEnabled(true)
-            end
+        end
     end)
-end 
+end
 
 function love.update(dt)
     -- Update game state
