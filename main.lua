@@ -98,6 +98,13 @@ function love.load()
         dropThroughTimer = 0   -- Timer to re-enable collision after dropping
     }
 
+    -- Coin counter variables
+    coinCount = 0
+    coinCounterFont = love.graphics.newFont(24)
+    coinCounterScale = 1.0
+    coinCounterBounce = 0
+    coinCounterShake = {x = 0, y = 0}
+
     -- Initialize player animations
     player.animations = {}
     player.animations.frame_width, player.animations.frame_height = 16, 16
@@ -142,37 +149,75 @@ function love.load()
     player.animation.currentAnimation = player.animations.animation_idle
     player.animation.currentSpriteSheet = player.animations.spriteSheet_idle
 
-    --coin animation
-    coinCollected = false
-    coin_spriteSheet = love.graphics.newImage("sprites/coin-spritesheet.png")
-    coin_grid = anim8.newGrid(16, 16, coin_spriteSheet:getWidth(), coin_spriteSheet:getHeight())
-    coin_animation = anim8.newAnimation(coin_grid('1-4', 1), 0.2)
-    -- initialize coin position
-    coin_x = 300
-    coin_y = 400
-    -- Initialize coin collider
-    coin_collider = world:newCircleCollider(coin_x, coin_y, 8)
-    coin_collider:setType('static') -- Set as static collider
-    coin_collider:setCollisionClass('Coin')
-    coin_collider:setObject({ x = coin_x, y = coin_y })
-    --coin_collider:setSensor(true) -- Set as sensor to avoid physical collisions
-    coin_collider:setPreSolve(function(collider_1, collider_2, contact)
-        if collider_2.collision_class == 'Player' and not coinCollected then
-            -- Mark the coin as collected
-            coinCollected = true
-            
-            -- Add some debug output
-            print("Coin collision detected! coinCollected = " .. tostring(coinCollected))
-            
-            -- Move coin off-screen
-            -- coin_x = -100
-            -- coin_y = -100
-            -- coin_collider:setPosition(coin_x, coin_y)
-            coin_collider:setType('inactive') -- Disable the collider
-            coin_collider:setSensor(true) -- Set as sensor to avoid further collisions
-            print("Coin collected!")
+    -- Coin class
+    Coin = {}
+    Coin.__index = Coin
+
+    function Coin:new(world, anim8)
+        local self = setmetatable({}, Coin)
+        self.collected = false
+        self.spriteSheet = love.graphics.newImage("sprites/coin-spritesheet.png")
+        self.grid = anim8.newGrid(16, 16, self.spriteSheet:getWidth(), self.spriteSheet:getHeight())
+        self.animation = anim8.newAnimation(self.grid('1-4', 1), 0.2)
+        self.x = 300
+        self.y = 400
+        self.collider = world:newCircleCollider(self.x, self.y, 8)
+        self.collider:setType('static')
+        self.collider:setCollisionClass('Coin')
+        self.collider:setObject({ x = self.x, y = self.y })
+        self.collider:setPreSolve(function(collider_1, collider_2, contact)
+            if collider_2.collision_class == 'Player' and not self.collected then
+                self.collected = true
+                coinCount = coinCount + 1 -- Increment coin counter
+                print("Coin collision detected! coinCollected = " .. tostring(self.collected))
+                print("Total coins collected: " .. coinCount)
+                
+                -- Add bounce effect to counter
+                coinCounterScale = 1.5
+                coinCounterBounce = 0.3
+                coinCounterShake.x = (math.random() - 0.5) * 4
+                coinCounterShake.y = (math.random() - 0.5) * 4
+                
+                self.collider:setType('inactive')
+                self.collider:setSensor(true)
+                print("Coin collected!")
+            end
+        end)
+        return self
+    end
+
+    function Coin:update(dt)
+        self.animation:update(dt)
+        if self.collider then
+            self.x, self.y = self.collider:getPosition()
+            self.collider:setPosition(self.x, self.y)
         end
-    end)
+    end
+
+    function Coin:draw()
+        if self.collider and not self.collected then
+            self.animation:draw(self.spriteSheet, self.x, self.y, 0, 1, 1,
+                self.spriteSheet:getHeight() / 2, self.spriteSheet:getHeight() / 2)
+        end
+    end
+
+    -- Create coins from map objects
+    coins = {} -- Change from single coin to coins table
+    if gameMap.layers["Coins"] and gameMap.layers["Coins"].objects then
+        print("Found Coins layer with " .. #gameMap.layers["Coins"].objects .. " objects")
+        for i, obj in pairs(gameMap.layers["Coins"].objects) do
+            local coin = Coin:new(world, anim8)
+            -- Position coin at center of the object
+            local centerX = obj.x + obj.width / 2
+            local centerY = obj.y + obj.height / 2
+            coin.collider:setPosition(centerX, centerY)
+            coin.x, coin.y = coin.collider:getPosition()
+            table.insert(coins, coin)
+            print("Created coin at: " .. centerX .. ", " .. centerY)
+        end
+    else
+        print("Warning: 'Coins' layer not found or has no objects")
+    end
 
     -- Player collision
     player.collider = world:newBSGRectangleCollider(player.x, player.y, player.animations.frame_width + 8, player.animations.frame_height + 5, 2)
@@ -455,20 +500,41 @@ function love.update(dt)
 
     player.animation.currentAnimation:update(dt)
 
-    -- update coin animation
-    coin_animation:update(dt)
-    -- Update coin position based on collider
-    if coin_collider then
-        coin_x, coin_y = coin_collider:getPosition()
-    end
-    -- Update coin collider position
-    if coin_collider then
-        coin_collider:setPosition(coin_x, coin_y)
+    -- Update all coins
+    for i, coin in ipairs(coins) do
+        coin:update(dt)
+        -- Update coin position based on collider
+        if coin.collider then
+            coin.x, coin.y = coin.collider:getPosition()
+        end
+        -- Update coin collider position
+        if coin.collider then
+            coin.collider:setPosition(coin.x, coin.y)
+        end
     end
 
     -- Update animated tiles
     gameMap:update(dt)
     updateAnimatedTiles(dt)
+
+    -- Update coin counter effects
+    if coinCounterScale > 1.0 then
+        coinCounterScale = coinCounterScale - dt * 2
+        if coinCounterScale < 1.0 then
+            coinCounterScale = 1.0
+        end
+    end
+    
+    if coinCounterBounce > 0 then
+        coinCounterBounce = coinCounterBounce - dt * 2
+        if coinCounterBounce < 0 then
+            coinCounterBounce = 0
+        end
+    end
+    
+    -- Reduce shake effect
+    coinCounterShake.x = coinCounterShake.x * 0.9
+    coinCounterShake.y = coinCounterShake.y * 0.9
 
     --zoom camera in onto the player
     cam:zoomTo(3)
@@ -498,20 +564,76 @@ function love.draw()
             player.animations.frame_width / 2, player.animations.frame_height / 2, 0, 0)
     end
 
-    -- Draw coin
-    -- print("Drawing coin, coinCollected = " .. tostring(coinCollected)) -- Keep for debugging if needed
-    if coin_collider and not coinCollected then
-        coin_animation:draw(coin_spriteSheet, coin_x, coin_y, 0, 1, 1,
-            coin_spriteSheet:getHeight() / 2, coin_spriteSheet:getHeight() / 2)
+    -- Draw all coins
+    for i, coin in ipairs(coins) do
+        coin:draw()
     end
 
     -- Draw collision boxes for debugging
     --world:draw()
     cam:detach()
+
+    -- Draw coin counter at top right
+    local windowW = love.graphics.getWidth()
+    local windowH = love.graphics.getHeight()
+
+    -- Set up coin counter display
+    love.graphics.setFont(coinCounterFont)
+    local coinText = "x " .. coinCount
+    local textWidth = coinCounterFont:getWidth(coinText)
+    local textHeight = coinCounterFont:getHeight()
+
+    -- Position at top right with some padding (extra space for coin sprite)
+    local x = windowW - textWidth - 50 + coinCounterShake.x
+    local y = 20 + coinCounterShake.y
+
+    -- Add a subtle background (wider for coin sprite)
+    love.graphics.setColor(0, 0, 0, 0.5)
+    love.graphics.rectangle("fill", x - 10, y - 5, textWidth + 45, textHeight + 10, 5, 5)
+
+    -- Draw a small coin sprite before the text
+    if #coins > 0 then
+        love.graphics.setColor(1, 1, 1, 1)
+        local coinSprite = coins[1].spriteSheet -- Use the coin spritesheet
+        local scale = 1.5
+        
+        -- Create a quad to show only the first frame (16x16 pixels at position 0,0)
+        local coinQuad = love.graphics.newQuad(0, 0, 16, 16, coinSprite:getWidth(), coinSprite:getHeight())
+        love.graphics.draw(coinSprite, coinQuad, x + 5, y + textHeight/2, 0, scale, scale, 8, 8)
+    end
+
+    -- Draw the coin counter with bounce effect
+    love.graphics.setColor(1, 0.8, 0.2) -- Golden color
+    love.graphics.push()
+    love.graphics.translate(x + 30 + textWidth/2, y + textHeight/2)
+    love.graphics.scale(coinCounterScale, coinCounterScale)
+    love.graphics.translate(-textWidth/2, -textHeight/2)
+    love.graphics.print(coinText, 0, 0)
+    love.graphics.pop()
+
+    -- Add a glowing outline effect
+    if coinCounterBounce > 0 then
+        love.graphics.setColor(1, 1, 0.5, coinCounterBounce)
+        for dx = -1, 1 do
+            for dy = -1, 1 do
+                if dx ~= 0 or dy ~= 0 then
+                    love.graphics.push()
+                    love.graphics.translate(x + 30 + textWidth/2 + dx, y + textHeight/2 + dy)
+                    love.graphics.scale(coinCounterScale, coinCounterScale)
+                    love.graphics.translate(-textWidth/2, -textHeight/2)
+                    love.graphics.print(coinText, 0, 0)
+                    love.graphics.pop()
+                end
+            end
+        end
+    end
     
+    -- CRITICAL: Reset color to white for all other drawing operations
+    love.graphics.setColor(1, 1, 1, 1)
+
     -- Draw controls info for one-way platforms
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Press Down to drop through one-way platforms", 10, 10) -- Updated text
+    --love.graphics.setColor(1, 1, 1)
+    --love.graphics.print("Press Down to drop through one-way platforms", 10, 10) -- Updated text
 end
 
 --cycle through the animated tiles in the map

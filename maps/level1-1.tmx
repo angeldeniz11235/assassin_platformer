@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="600" height="63" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="77">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="600" height="63" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="136">
  <editorsettings>
   <export target="level1-1.lua" format="lua"/>
  </editorsettings>
@@ -388,5 +388,65 @@
     <property name="isOneWay" value="isBridge"/>
    </properties>
   </object>
+ </objectgroup>
+ <objectgroup id="5" name="Coins">
+  <object id="78" x="298.25" y="402.125" width="3.125" height="2.625"/>
+  <object id="79" x="331" y="379.875" width="3.5" height="3.375"/>
+  <object id="80" x="371.375" y="405.625" width="4.125" height="3.25"/>
+  <object id="81" x="437.5" y="386.5" width="4.5" height="4.125"/>
+  <object id="82" x="518.375" y="404.625" width="3.125" height="4.125"/>
+  <object id="83" x="601.75" y="393.625" width="3.125" height="1.875"/>
+  <object id="84" x="676.125" y="384.75" width="6" height="3.5"/>
+  <object id="85" x="642" y="375" width="3.875" height="3"/>
+  <object id="86" x="739.375" y="393.625" width="4.125" height="2.75"/>
+  <object id="87" x="812.75" y="410.375" width="4" height="3.875"/>
+  <object id="88" x="876.625" y="405.5" width="3.625" height="3.625"/>
+  <object id="89" x="913.75" y="418.375" width="2.625" height="3.375"/>
+  <object id="90" x="936.5" y="410.25" width="3.625" height="3.75"/>
+  <object id="91" x="984.625" y="383.5" width="3.875" height="3.625"/>
+  <object id="92" x="997.75" y="373.625" width="3.875" height="3.125"/>
+  <object id="93" x="940.25" y="384.875" width="3.375" height="1.875"/>
+  <object id="94" x="1090.13" y="410.25" width="2.875" height="2.25"/>
+  <object id="95" x="1056.25" y="408.5" width="2.25" height="2.375"/>
+  <object id="96" x="1083" y="397.625" width="1.875" height="2.125"/>
+  <object id="97" x="1055.5" y="393.25" width="3.125" height="3"/>
+  <object id="98" x="1019.38" y="409.125" width="2.5" height="1.75"/>
+  <object id="99" x="973.125" y="479.875" width="2.125" height="1.75"/>
+  <object id="100" x="988.875" y="479.375" width="2.375" height="2"/>
+  <object id="101" x="1014.88" y="460.375" width="2.75" height="1.875"/>
+  <object id="102" x="1048.63" y="476.25" width="2.625" height="2.375"/>
+  <object id="103" x="1095.38" y="527.25" width="2.5" height="2.5"/>
+  <object id="104" x="1055.63" y="531.5" width="2.75" height="2.125"/>
+  <object id="105" x="1020.13" y="523.625" width="2.125" height="2.5"/>
+  <object id="106" x="1034" y="559.375" width="2.5" height="2.5"/>
+  <object id="107" x="987.125" y="575" width="2.25" height="2.125"/>
+  <object id="108" x="954.5" y="534.875" width="1.875" height="2.375"/>
+  <object id="109" x="946.125" y="583.75" width="1.5" height="2.5"/>
+  <object id="110" x="912.25" y="571.875" width="3.625" height="2"/>
+  <object id="111" x="878.25" y="555" width="2" height="2.375"/>
+  <object id="112" x="935.625" y="520.75" width="1.875" height="1.75"/>
+  <object id="113" x="936.25" y="489.625" width="1.75" height="1.625"/>
+  <object id="114" x="936.75" y="456.5" width="2.5" height="2.375"/>
+  <object id="115" x="827.625" y="492.125" width="2.25" height="1.25"/>
+  <object id="116" x="804.5" y="471.625" width="1.625" height="2.125"/>
+  <object id="117" x="866" y="495.375" width="1.625" height="1.75"/>
+  <object id="118" x="774.125" y="506.625" width="3.25" height="1.625"/>
+  <object id="119" x="750.75" y="544.75" width="2.75" height="2.875"/>
+  <object id="120" x="719" y="522.125" width="2.375" height="2.125"/>
+  <object id="121" x="698.5" y="531.5" width="3.125" height="2.25"/>
+  <object id="122" x="680.25" y="541" width="3.25" height="2.375"/>
+  <object id="123" x="685.5" y="593.875" width="1.875" height="2.25"/>
+  <object id="124" x="702.75" y="618" width="1.625" height="1.625"/>
+  <object id="125" x="738.25" y="608" width="1.75" height="2.5"/>
+  <object id="126" x="758.125" y="593" width="3.5" height="2.75"/>
+  <object id="127" x="724.5" y="623" width="1.375" height="2.125"/>
+  <object id="128" x="719.625" y="578.875" width="2.125" height="1.5"/>
+  <object id="129" x="801" y="562.333" width="3.33333" height="3"/>
+  <object id="130" x="820.667" y="550.333" width="2.33333" height="4"/>
+  <object id="131" x="805.333" y="572.333" width="3" height="3.66667"/>
+  <object id="132" x="455.667" y="409.333" width="4.66667" height="5"/>
+  <object id="133" x="850.667" y="455.333" width="3.66667" height="3"/>
+  <object id="134" x="903.667" y="479" width="5.66667" height="5.33333"/>
+  <object id="135" x="1089.67" y="469.333" width="3.66667" height="2.66667"/>
  </objectgroup>
 </map>
