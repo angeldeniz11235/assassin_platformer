@@ -46,8 +46,8 @@ function love.load()
     world:addCollisionClass('Wall')
     world:addCollisionClass('Ceiling')
     world:addCollisionClass('Coin')
-    -- Add a new collision class for one-way platforms
     world:addCollisionClass('OneWayPlatform')
+    world:addCollisionClass('Portal')
 
     -- Create ground and wall colliders from map - with safety checks
     if gameMap.layers["Platform-Colliders"] and gameMap.layers["Platform-Colliders"].objects then
@@ -64,6 +64,8 @@ function love.load()
             else
                 collider:setCollisionClass('Ground')
             end
+            -- Store a reference to the collider in the map object for later access
+            obj.collider = collider
         end
     else
         print(
@@ -153,6 +155,9 @@ function love.load()
     Coin = {}
     Coin.__index = Coin
 
+    -- All coins collected boolean
+    allCoinsCollected = false
+
     function Coin:new(world, anim8)
         local self = setmetatable({}, Coin)
         self.collected = false
@@ -181,6 +186,11 @@ function love.load()
                 self.collider:setType('inactive')
                 self.collider:setSensor(true)
                 print("Coin collected!")
+                -- set 
+                if coinCount == #coins then
+                    allCoinsCollected = true
+                    print("All coins collected!")
+                end
             end
         end)
         return self
@@ -217,6 +227,56 @@ function love.load()
         end
     else
         print("Warning: 'Coins' layer not found or has no objects")
+    end
+
+    -- Portal class
+    Portal = {}
+    Portal.__index = Portal
+
+    function Portal:new(world, anim8)
+        local self = setmetatable({}, Portal)
+        self.spriteSheet = love.graphics.newImage("sprites/portal6_spritesheet.png")
+        self.grid = anim8.newGrid(32, 32, self.spriteSheet:getWidth(), self.spriteSheet:getHeight())
+        self.animation = anim8.newAnimation(self.grid('1-4', 1), 0.2)
+        self.x = 0
+        self.y = 0
+        self.collider = world:newRectangleCollider(self.x, self.y, 32, 32)
+        self.collider:setType('static')
+        self.collider:setCollisionClass('Portal')
+        return self
+    end
+
+    function Portal:update(dt)
+        self.animation:update(dt)
+        if self.collider then
+            self.x, self.y = self.collider:getPosition()
+            self.collider:setPosition(self.x, self.y)
+        end
+    end
+
+    function Portal:draw()
+        if self.collider then
+            self.animation:draw(self.spriteSheet, self.x, self.y, 0, 1, 1,
+                self.spriteSheet:getHeight() / 2, self.spriteSheet:getHeight() / 2)
+        end
+    end
+
+    -- Create portal from Portal map object
+    portals = {} -- Change from single portal to portals table
+    if gameMap.layers["Portal"] and gameMap.layers["Portal"].objects then
+        print("Found Portal layer with " .. #gameMap.layers["Portal"].objects .. " objects")
+        for i, obj in pairs(gameMap.layers["Portal"].objects) do
+            local portal = Portal:new(world, anim8)
+            -- Position portal at center of the object
+            local centerX = obj.x + obj.width / 2
+            local centerY = obj.y + obj.height / 2
+            portal.collider:setPosition(centerX, centerY)
+            portal.x, portal.y = portal.collider:getPosition()
+            table.insert(portals, portal)
+            print("Created portal at: " .. centerX .. ", " .. centerY)
+        end
+    else
+        print("Warning: 'Portal' layer not found or has no objects")
     end
 
     -- Player collision
@@ -513,6 +573,47 @@ function love.update(dt)
         end
     end
 
+    -- Update portal animations
+    for i, portal in ipairs(portals) do
+        portal:update(dt)
+        -- Update portal position based on collider
+        if portal.collider then
+            portal.x, portal.y = portal.collider:getPosition()
+        end
+        -- Update portal collider position
+        if portal.collider then
+            portal.collider:setPosition(portal.x, portal.y)
+        end
+    end
+
+    -- Check if all coins are collected
+    if allCoinsCollected then
+        -- Iterate through the colliders and adjust their height
+        if gameMap.layers["Platform-Colliders"] and gameMap.layers["Platform-Colliders"].objects then
+            for i, obj in pairs(gameMap.layers["Platform-Colliders"].objects) do
+                -- Check if portal_entry property exists and is the string "true"
+                -- Also, ensure the collider exists and we haven't already modified this object
+                if obj.properties and obj.properties.portal_entry == "true" and obj.collider and not obj.height_adjusted then
+                    local originalHeight = obj.height
+                    local newHeight = originalHeight / 2
+                    local oldX, oldY, oldW, oldH = obj.collider:getDimensions()
+                    local oldPosX, oldPosY = obj.collider:getPosition()
+
+                    -- Adjust the position to keep the top edge in the same place
+                    local newPosY = oldPosY + (oldH - newHeight) / 2
+                    
+                    obj.collider:setDimensions(oldW, newHeight)
+                    obj.collider:setPosition(oldPosX, newPosY)
+                    obj.height_adjusted = true -- Set a new flag to true to prevent further adjustments for this object
+                    print("Adjusted collider height for portal entry!")
+                end
+            end
+        end
+        -- Reset allCoinsCollected to false to prevent repeated triggering
+        allCoinsCollected = false
+    end
+
+
     -- Update animated tiles
     gameMap:update(dt)
     updateAnimatedTiles(dt)
@@ -567,6 +668,11 @@ function love.draw()
     -- Draw all coins
     for i, coin in ipairs(coins) do
         coin:draw()
+    end
+
+    -- Draw portals
+    for i, portal in ipairs(portals) do
+        portal:draw()
     end
 
     -- Draw collision boxes for debugging
